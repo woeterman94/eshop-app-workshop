@@ -6,6 +6,18 @@ internal static class KeycloakHostingExtensions
 {
     private const int DefaultContainerPort = 8080;
 
+    public static IResourceBuilder<TResource> WithReference<TResource>(this IResourceBuilder<TResource> builder,
+        IResourceBuilder<KeycloakContainerResource> keycloakBuilder,
+        string envVar)
+        where TResource : IResourceWithEnvironment
+    {
+        builder.WithReference(keycloakBuilder);
+
+        builder.WithEnvironment(envVar, keycloakBuilder.Resource.ClientSecret);
+
+        return builder;
+    }
+
     public static IResourceBuilder<KeycloakContainerResource> AddKeycloakContainer(
         this IDistributedApplicationBuilder builder,
         string name,
@@ -13,6 +25,7 @@ internal static class KeycloakHostingExtensions
         string? tag = null)
     {
         var keycloakContainer = new KeycloakContainerResource(name);
+        keycloakContainer.ClientSecret = Guid.NewGuid().ToString("N");
 
         return builder
             .AddResource(keycloakContainer)
@@ -20,6 +33,7 @@ internal static class KeycloakHostingExtensions
             .WithHttpEndpoint(hostPort: port, containerPort: DefaultContainerPort)
             .WithEnvironment("KEYCLOAK_ADMIN", "admin")
             .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", "admin")
+            .WithEnvironment("WEBAPP_CLIENT_SECRET", keycloakContainer.ClientSecret)
             .WithArgs("start-dev")
             .WithManifestPublishingCallback(context => WriteKeycloakContainerToManifest(context, keycloakContainer));
     }
@@ -59,4 +73,5 @@ internal static class KeycloakHostingExtensions
 
 internal class KeycloakContainerResource(string name) : ContainerResource(name), IResourceWithServiceDiscovery
 {
+    public string? ClientSecret { get; set; }
 }
