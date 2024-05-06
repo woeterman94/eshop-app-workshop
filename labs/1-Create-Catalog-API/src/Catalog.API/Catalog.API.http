@@ -1,6 +1,6 @@
-@Catalog.API_HostAddress = http://localhost:5180
+@Catalog_API_HostAddress = http://localhost:5087
 
-GET {{Catalog.API_HostAddress}}/items/
+GET {{Catalog_API_HostAddress}}/items/
 Accept: application/json
 
 ###
